@@ -18,7 +18,7 @@ We deviate from each in a few ways, however, so we're writing up our own instruc
 ## AWS account setup
 If you don't already have an AWS accout, you'll need to set up an account (duh).
 It's highly recommended to set up MFA on your root account, and set up an IAM user with EC2, EFS, and Route 53 permissions.
-Use the IAM user to do all the actual work: launching instances, configuring things, SSH'ing, etc.
+.[Create the IAM user].(IAM.md) to do all the actual work: launching instances, configuring things, SSH'ing, etc.
 
 
 ## Setting up the instances
