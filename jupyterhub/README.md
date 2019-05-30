@@ -6,20 +6,19 @@ For now, let's get the server (an AWS EC2 instance) up and running, and install 
 
 
 1. Starting the hub/webserver/Swarm manager instance
-   * We developed and tested the config files on a t2.micro instance.
-     For deployment, we'll probably want a larger instance for the hub, especially if it will also run a few notebook containers.
-     We used a standard 64-bit Amazon Linux AMI.
-     It has a reasonable number of packages in the `yum` repo, and most of the rest of the software we use can be installed with `pip`.
-
+   * (Choose AMI and instance type) We used a standard 64-bit(x86) Amazon Linux AMI on a t2.micro instance for testing, however a larger instance is recommended for the actual build. May need to install a few more packages with `pip` and `conda`.
+   * (configure instance and storage and tags?) 
+   * (configure security groups) 
      We're running all instances in the same AWS virtual private cloud (VPC).
      Suppose our VPC's IPv4 CIDR is 172.31.0.0/16.
-     We create a security group called "Jupyterhub" with the following allowed ports to the outside world:
+     
+     We create a new security group called "jhub" with the following allowed ports to the outside world:
 
-        |Ports |	Protocol	| Source |
-        |------|----------------|--------|
-        |22	   | tcp	| 0.0.0.0/0, ::/0 |
-        |80	   | tcp	| 0.0.0.0/0, ::/0 |
-        |443   | tcp	| 0.0.0.0/0, ::/0 |
+        |Type  | Ports |Protocol | Source |
+        |------|-------|---------|-------|
+        |SSH   | 22	   | tcp	   | 0.0.0.0/0, ::/0 | 
+        |HTTP  | 80	   | tcp 	   | 0.0.0.0/0, ::/0 |
+        |HTTPS | 443   | tcp	   | 0.0.0.0/0, ::/0 |
 
     * For inside the VPC only, we add the following ports to allow the hub API and connect to the notebooks on remote nodes.
 
