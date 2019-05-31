@@ -6,22 +6,22 @@ For now, let's get the server (an AWS EC2 instance) up and running, and install 
 
 
 1. Starting the hub/webserver/Swarm manager instance
-   * We developed and tested the config files on a t2.micro instance.
-     For deployment, we'll probably want a larger instance for the hub, especially if it will also run a few notebook containers.
-     We used a standard 64-bit Amazon Linux AMI.
-     It has a reasonable number of packages in the `yum` repo, and most of the rest of the software we use can be installed with `pip`.
-
+   * (Choose AMI and instance type) We used a standard 64-bit(x86) Amazon Linux AMI on a t2.micro instance for testing, however a larger instance is recommended for the actual build. May need to install a few more packages with `pip` and `conda`.
+   * (configure instance and storage and tags?) 
+   * (configure security groups) 
      We're running all instances in the same AWS virtual private cloud (VPC).
      Suppose our VPC's IPv4 CIDR is 172.31.0.0/16.
-     We create a security group called "Jupyterhub" with the following allowed ports to the outside world:
+     
+     We create a new security group called "jhub" with the following custom ports:
 
-        |Ports |	Protocol	| Source |
-        |------|----------------|--------|
-        |22	   | tcp	| 0.0.0.0/0, ::/0 |
-        |80	   | tcp	| 0.0.0.0/0, ::/0 |
-        |443   | tcp	| 0.0.0.0/0, ::/0 |
+        |Type  | Ports |Protocol | Source |
+        |------|-------|---------|-------|
+        |SSH   | 22	   | tcp	   | 0.0.0.0/0, ::/0 | 
+        |HTTP  | 80	   | tcp 	   | 0.0.0.0/0, ::/0 |
+        |HTTPS | 443   | tcp	   | 0.0.0.0/0, ::/0 |
+        |All traffic| All | All  | (the CIDR address for your VPC) |
 
-    * For inside the VPC only, we add the following ports to allow the hub API and connect to the notebooks on remote nodes.
+    * (where is this configured? I can't find this security group) For inside the VPC only, we add the following ports to allow the hub API and connect to the notebooks on remote nodes.
 
         |Ports |	Protocol	| Source |
         |------|----------|--------|
@@ -32,21 +32,27 @@ For now, let's get the server (an AWS EC2 instance) up and running, and install 
         See [Docker Swarm manager and workers](../swarm_legacy/README.md) for details.
 
     * Since we're inside a VPC (i.e., closed off from the outside world except for the above ports), we can instead just enable all ports 0-65536 for 172.31.0.0/16, which is the CIDR of the default VPC.
-      This is probably the most convenient route to take, so we won't have to worry about opening ports later.
-
-
-2. Install a bunch of packages
+  
+    * You will need to create or enter a SSH Key to launch the instance, make sure to put the pem file in your ~/.ssh folder and that you change the permissions of the file using:
+    chmod 400 <your-key.pem>
+    
+    * Return to the EC2 menu and wait for the instance to finish building. 
+    
+2. Connect to the EC2 instance and install a bunch of packages
    * To connect to the new instance, you'll need your SSH private key.
-     AWS will make a keypair and give you the private key if you don't already have one.
-     Once you've downloaded your AWS SSH key and started up your instance, you can connect to it with `ssh -i ~/.ssh/aws_key.pem ec2-user@{PUBLIC_IPv4}`.
+    
+   * connect to your ec2 instance by opening a terminal(for mac or linux) and typing 
+     `ssh -i ~/.ssh/<aws_key.pem> ec2-user@<PUBLIC_IPv4>`.
+     ( your IP address is located on the description of your ec2 instance )
      The standard user is `ec2-user`, which has `sudo` privileges; once inside, you can make new users and add other authorized SSH keys if you like.
      We'll use `ec2-user2` to orchestrate everything.
 
-     **Protip**: add the following function/alias to your `.bashrc`, so you can `aws-ssh {PUBLIC_IPv4}`.
+     **Protip**: add the following function/alias to your `.bashrc`, so you can `aws-ssh <PUBLIC_IPv4>`.
      If you have an elastic IP or a domain name to use, you can also edit your `~/.ssh/config`.
-     ```bash
+     ~/.bashrc:
+     ```
      aws-ssh() {
-         ssh -i ~/.ssh/aws_key.pem ec2-user@$1
+         ssh -i ~/.ssh/<aws_key.pem> ec2-user@$1
      }
      ```
 
