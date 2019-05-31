@@ -50,7 +50,7 @@ For now, let's get the server (an AWS EC2 instance) up and running, and install 
      **Protip**: add the following function/alias to your `.bashrc`, so you can `aws-ssh <PUBLIC_IPv4>`.
      If you have an elastic IP or a domain name to use, you can also edit your `~/.ssh/config`.
      ~/.bashrc:
-     ```
+     ```bash
      aws-ssh() {
          ssh -i ~/.ssh/<aws_key.pem> ec2-user@$1
      }
@@ -63,18 +63,19 @@ For now, let's get the server (an AWS EC2 instance) up and running, and install 
       chmod -R 700 /srv/jupyterhub
       ```
 
-   * Install a bunch of packages from the system repos.
+   * Install a repo and docker, then start docker:
       ```bash
       sudo yum update -y
       curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.rpm.sh | sudo bash
+      sudo amazon-linux-extras install epel
       sudo yum install -y python36 python36-pip python36-devel git git-lfs docker gcc gcc-c++
       sudo service docker start
       ```
 
-   * Clone this repo
+   * Clone the stem-camp-deploy repo
       ```bash
       cd && mkdir repos && cd repos
-      git clone https://github.com/jamesfolberth/jupyterhub_AWS_deployment.git
+      git clone https://github.com/jamesfolberth/stem-camp-deploy.git
       ```
 
    * Add `ec2-user` to the Docker group, so we don't have to `sudo` every time we want to run a Docker container.
@@ -83,19 +84,19 @@ For now, let's get the server (an AWS EC2 instance) up and running, and install 
       ```
 
    * Logout and back in to make group changes for `ec2-user`.
-     Verify changes with `groups`.
+     Verify that ec2-user is listed when running command `groups`.
 
    * Verify docker works with `docker run hello-world`.
 
-   * Download Node.js, which provides npm.
-     You probably want to visit [nodejs.org](https://nodejs.org/en/download/) to get the latest LTS version.
+   * Download and install Node.js, which provides npm.
+     You probably want to visit [nodejs.org](https://nodejs.org/en/download/) to look up the latest LTS version.(search for the 64-bit linux version and replace the <vx.xx.xx> with the most recent version number)
 
      ```bash
      cd && mkdir downloads && cd downloads
 
-     wget https://nodejs.org/dist/v6.10.2/node-v6.10.2-linux-x64.tar.xz
-     tar -xvf node-v6.10.2-linux-x64.tar.xz
-     cd node-v6.10.2-linux-x64
+     wget https://nodejs.org/dist/<vX.XX.XX>/node-<vX.XX.XX>-linux-x64.tar.xz
+     tar -xvf node-<vX.XX.XX>-linux-x64.tar.xz
+     cd node-<vX.XX.XX>-linux-x64.tar.xz
      sudo cp -r bin/* /usr/bin/
      sudo cp -r include/* /usr/include/
      sudo cp -r lib/* /usr/lib/
@@ -110,9 +111,9 @@ For now, let's get the server (an AWS EC2 instance) up and running, and install 
 
    * Install python packages with `pip`.
      ```bash
-     sudo pip-3.6 install jupyterhub
-     sudo pip-3.6 install --upgrade notebook
-     sudo pip-3.6 install oauthenticator dockerspawner
+     pip install jupyterhub --user
+     pip install --upgrade notebook
+     pip install oauthenticator dockerspawner --user
      ```
 
 TODO JMF 22 May 2018: move to nginx README
