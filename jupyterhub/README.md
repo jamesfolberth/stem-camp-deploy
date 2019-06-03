@@ -49,6 +49,7 @@ For now, let's get the server (an AWS EC2 instance) up and running, and install 
 
      **Protip**: add the following function/alias to your `.bashrc`, so you can `aws-ssh <PUBLIC_IPv4>`.
      If you have an elastic IP or a domain name to use, you can also edit your `~/.ssh/config`.
+     
      ~/.bashrc:
      ```bash
      aws-ssh() {
@@ -116,62 +117,7 @@ For now, let's get the server (an AWS EC2 instance) up and running, and install 
      pip install oauthenticator dockerspawner --user
      ```
 
-TODO JMF 22 May 2018: move to nginx README
-
-3. Generate an SSL certificate
-
-   a. If you don't have a domain name to use, generate a self-signed SSL certificate.
-      A self-signed cert is quite okay for testing/development, but your browser will probably warn you about the cert when you navigate to your page.
-
-    ```bash
-    sudo mkdir /srv/jupyterhub/ssl
-    sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /srv/jupyterhub/ssl/hub.key -out /srv/jupyterhub/ssl/hub.crt
-    ```
-
-    b. If you do have a domain name to use, see the [README](../nginx/README.md) in the `nginx` directory to generate SSL/TLS certs using [Let's Encrypt](https://letsencrypt.org/), set up routing to the domain/subdomain you want to use, and install and configure `nginx` to serve static HTML and proxy to the hub.
-
-
-TODO JMF 22 May 2018: move to nginx README
-
-4. Register the project with Google OAuth 2.0
-
-   We want to use Google's authentication system for our project.
-   A lot of Jupyterhub deployments use GitHub authentication, which is good for their use-case (because their users likely already have GitHub accounts), but for us, Google is probably simpler.
-   To do this, we want to create an OAuth 2.0 Client ID for our project, so the users can authenticate with their Google accounts.
-
-   * Go to [Google API Manager](https://console.developers.google.com/apis/credentials), create a project, and create an OAuth client ID.
-     You'll need to set a meaningful, recognizable project name, as it will be displayed to the users when they authenticate.
-
-   * Set the authorized JS origins to `https://hub.example.com:443`, and the authorized callback URI to `https://hub.example.com:443/hub/oauth_callback`.
-
-     - If you're using your own domain, set `OAUTH_CALLBACK_URL` in the Jupyterhub `start.sh` script.
-
-     - If you're using the EC2 public hostname (something like `ec2-{PUBLIC_IPv4}.us-west-2.compute.amazonaws.com`) instead of your own domain, you can use the following in `start.sh` to automatically set `OAUTH_CALLBACK_URL` to the current instance's public hostname.
-        Note that you may have to update the authorized JS origin and callback URI on [Google API Manager](https://console.developers.google.com/apis/credentials) every time you stop/start the instance, as the restarted instance may be assigned a new DNS name.
-
-        ```bash
-        # Get the public hostname
-        export EC2_PUBLIC_HOSTNAME=`ec2-metadata --public-hostname | sed -ne 's/public-hostname: //p'`
-        if [ -z $EC2_PUBLIC_HOSTNAME ]; then
-            echo "Error: Failed to get EC2 public hostname from `ec2-metadata`"
-            exit 1
-        else
-            echo "Using EC2_PUBLIC_HOSTNAME=$EC2_PUBLIC_HOSTNAME"
-        fi
-        export OAUTH_CALLBACK_URL=https://${EC2_PUBLIC_HOSTNAME}:443/hub/oauth_callback
-        ```
-
-   * Once you've created the project, copy the client ID and secret to the file `/srv/jupyterhub/env`.
-
-     ```bash
-     # Google OAuth 2.0
-     export OAUTH_CLIENT_ID=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA.apps.googleusercontent.com
-     export OAUTH_CLIENT_SECRET=BBBBBBBBBBBBBBBBBBBBB
-     ```
-
-     Note hat these are **secret**, and should not be pushed to a git repo or accessible for other users (hence the `chmod 700` when creating `/srv/jupyterhub` and why we source this file instead of hard-coding a config file in the repo).
-
-5. Set up Jupyterhub
+3. Set up Jupyterhub
     * Add at least one admin user to `/srv/jupyterhub/userlist` with the following format
         ```
         user.name@gmail.com admin
@@ -189,9 +135,9 @@ TODO JMF 22 May 2018: move to nginx README
       - if authentication failed (e.g., user not in `/srv/jupyterhub/userlist` or user not added through Jupyterhub web interface by admin user), you should see a 403 "Forbidden".
       - we haven't built/pulled the data8-notebook (see [data8-notebook README](../data8-notebook/README.md)) or started the Docker swarm manager/workers, so if you try to start a server, you should see a 500 "Internal Server Error".
 
-6. Set up [nginx](../nginx/README.md), [NFS](../nfs/README.md), and set up the [Docker swarm](../swarm_legacy/README.md).
+4. Set up [nginx](../nginx/README.md), [NFS](../nfs/README.md), and set up the [Docker swarm](../swarm_legacy/README.md).
 
-7. Start Jupyterhub
+5. Start Jupyterhub
 
     This should be as simple as running `start.sh`.
     I like to run `start.sh` in a `screen` session so I can detach and logout of my SSH connection.
