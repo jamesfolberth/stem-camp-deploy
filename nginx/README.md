@@ -89,26 +89,26 @@ TODO JMF 22 May 2018: move to nginx README
    For now, the Jupyterhub instance will run the hub as well as serve static HTML, so we set up hosted zones to point to the elastic IP we allocated for the hub instance.
    We can change that later, though.
 
-3. To point our domain (and subdomain) to the right IP, we need to set up a couple of hosted zones.
-   We follow the instructions [here](https://aws.amazon.com/premiumsupport/knowledge-center/create-subdomain-route-53/) to set up the subdomain.
+3. (this section may need more work)To point our domain (and subdomain) to the right IP, we need to configure two hosted zones.
+(See [set up the subdomain](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/dns-routing-traffic-for-subdomains.html#dns-routing-traffic-for-subdomains-creating-hosted-zone) for more information).
 
-3. Set the hosted zone to route to `example.com`.
-   1. Sign in to the [Route 53](https://console.aws.amazon.com/route53/home) console and click the "Hosted zones" from the navigation pane on the left.
-      This assumes you already have a hosted zone that was created when you registered your domain with Route 53.
-   2. Enter the following information into the corresponding fields and create the hosted zone:
+* Set the hosted zone to route to `example.com`.
+   1.Sign in to the [Route 53](https://console.aws.amazon.com/route53/home) console and click the "Hosted zones" from the navigation pane on the left.
+   2. Note that a hosted zone has been preconfigured for `example.com` when you registered the domain. Select this record.
+   3. Click "Create Record Set" to point the domain to the elastic IP allocatd earlier.
+     * Leave "Name" blank, since we're going to set up the base domain.
+     * Leave "Type" as "A - IPv4 address"
+     * Leave time to live (TTL) as 300 seconds
+     * For "Value", enter the elastic IP allocated earlier and associated with the hub/`nginx` instance.
+     * "Routing Policy" can be "Simple".
+     * Click "Create"
+ 
+ * Set the hosted zone for `hub.example.com`
+    1. For this new zone, enter the following information into the corresponding fields and create the hosted zone:
       * For Domain Name, type your domain name (`example.com`).
       * For Comment, type text that describes what the subdomain does or is for.
       * For Type, choose Public.
-   3. Click "Create Record Set" to point the domain to the elastic IP allocatd earlier.
-      * Leave "Name" blank, since we're going to set up the base domain.
-      * Leave "Type" as "A - IPv4 address"
-      * Leave time to live (TTL) as 300 seconds
-      * For "Value", enter the elastic IP allocated earlier and associated with the hub/`nginx` instance.
-      * "Routing Policy" can be "Simple".
-      * Click "Create"
-
-4. Repeat step 3. for `hub.example.com`, using the same hosted zone.
-
+    2. Repeat the same steps from `example.com`.
 
 ## Setting up nginx
 1. On the AMI we've used (one of the Amazon Linux flavors), `nginx` is in the repos, so install it with
