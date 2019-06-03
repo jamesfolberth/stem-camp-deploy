@@ -1,34 +1,44 @@
 # Setting up Webserver Stuff
-We want to serve static webpages from `example.com` and the hub from `hub.example.com`.
+We want to serve static webpages from `<example.com>` and the hub from `<hub.example.com>`(where example is replaced with your chosen domain name).
 The configuration files in this directory set this up.
 We expect to have ports 22, 80, and 443 open.
 If the user goes to either site over HTTP, we redirect them to port 443 to use HTTPS.
 
-We do all this in a few pieces.
-We first create SSL/TLS certificates with [Let's Encrypt](https://letsencrypt.org/).
-We then register a domain name and set up routing, including to the subdomain.
-Finally, we install and configure `nginx`.
-
+We do all this in a few pieces:
+ * Create SSL/TLS certificates with [Let's Encrypt](https://letsencrypt.org/).
+ * Register a domain name and set up routing, including to the subdomain.
+ * Install and configure `nginx`.
 
 TODO JMF 22 May 2018: mention that user should change `example.com` in conf files
+## Generate an SSL/TLS certificate
 
-
-# Generate an SSL certificate
-
-   a. If you don't have a domain name to use, generate a self-signed SSL certificate.
-      A self-signed cert is quite okay for testing/development, but your browser will probably warn you about the cert when you navigate to your page.
+   * If you don't have a domain name to use, generate a self-signed SSL certificate. A self-signed cert is quite okay for testing/development, but your browser will probably warn you about the cert when you navigate to your page.
 
     ```bash
     sudo mkdir /srv/jupyterhub/ssl
     sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /srv/jupyterhub/ssl/hub.key -out /srv/jupyterhub/ssl/hub.crt
     ```
 
-    b. If you do have a domain name to use, see the [README](../nginx/README.md) in the `nginx` directory to generate SSL/TLS certs using [Let's Encrypt](https://letsencrypt.org/), set up routing to the domain/subdomain you want to use, and install and configure `nginx` to serve static HTML and proxy to the hub.
+   * If you do have a domain name to use, this example assumes we're generating certs for `example.com`(which you will replace with your own domain). We're going to use `example.com` to serve static HTML pages, and `hub.example.com` for Jupyterhub, so we'll actually create two certs.
+The certs we generate are output to `/etc/letsencrypt/live/`
+
+1. Generate an SSL/TLS key with [Let's Encrypt](https://letsencrypt.org/).
+   ```bash
+   cd && cd repos
+   git clone https://github.com/letsencrypt/letsencrypt
+   cd letsencrypt
+   sudo ./letsencrypt-auto certonly --standalone -v -d hub.example.com --debug # need debug on Amazon Linux
+   ```
+
+2. Generate D-H parameters
+   ```bash
+   sudo openssl dhparam -out /etc/letsencrypt/live/hub.example.com/dhparams.pem 2048
+   ```
 
 
 TODO JMF 22 May 2018: move to nginx README
 
-# Register the project with Google OAuth 2.0
+## Register the project with Google OAuth 2.0
 
    We want to use Google's authentication system for our project.
    A lot of Jupyterhub deployments use GitHub authentication, which is good for their use-case (because their users likely already have GitHub accounts), but for us, Google is probably simpler.
@@ -65,33 +75,21 @@ TODO JMF 22 May 2018: move to nginx README
      ```
 
      Note hat these are **secret**, and should not be pushed to a git repo or accessible for other users (hence the `chmod 700` when creating `/srv/jupyterhub` and why we source this file instead of hard-coding a config file in the repo).
-## SSL/TLS certificate with Let's Encrypt
-This is assuming we're generating certs for `example.com`.
-This will obviously be different for your site.
-We're going to use `example.com` to serve static HTML pages, and `hub.example.com` for Jupyterhub, so we'll actually do this twice.
-The certs we generate are output to `/etc/letsencrypt/live/`
-
-1. Generate an SSL/TLS key with [Let's Encrypt](https://letsencrypt.org/).
-   ```bash
-   cd && cd repos
-   git clone https://github.com/letsencrypt/letsencrypt
-   cd letsencrypt
-   sudo ./letsencrypt-auto certonly --standalone -v -d hub.example.com --debug # need debug on Amazon Linux
-   ```
-
-2. Generate D-H parameters
-   ```bash
-   sudo openssl dhparam -out /etc/letsencrypt/live/hub.example.com/dhparams.pem 2048
-   ```
-
 
 ## Set up domain name and routing
-1. We used Amazon [Route 53](https://aws.amazon.com/route53/) to register the domain name `example.com`.
-   We also create a new [Elastic IP](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-ip-addresses-eip.html) and associate it with the EC2 instance running the hub and `nginx`.
+1. Register a domain name `example.com` Amazon [Route 53](https://aws.amazon.com/route53/). Select all of the defaults.
+2. Create a new [Elastic IP](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-ip-addresses-eip.html) and associate it with the EC2 instance running the hub and `nginx`. 
+   * Enter the EC2 dashboard.
+   * Select 'Elastic IPs' from the sidebar menu
+   * Select 'Allocate new address'
+   * Choose 'Amazon Pool'
+   * Right click on the newly created IP and select 'Associate address'
+   * Associate the address to your Jupyterhub/NGINX instance.
+   
    For now, the Jupyterhub instance will run the hub as well as serve static HTML, so we set up hosted zones to point to the elastic IP we allocated for the hub instance.
    We can change that later, though.
 
-   To point our domain (and subdomain) to the right IP, we need to set up a couple hosted zones.
+3. To point our domain (and subdomain) to the right IP, we need to set up a couple of hosted zones.
    We follow the instructions [here](https://aws.amazon.com/premiumsupport/knowledge-center/create-subdomain-route-53/) to set up the subdomain.
 
 3. Set the hosted zone to route to `example.com`.
