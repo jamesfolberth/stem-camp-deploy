@@ -21,7 +21,7 @@ For now, let's get the server (an AWS EC2 instance) up and running, and install 
         |HTTPS | 443   | tcp	   | 0.0.0.0/0, ::/0 |
         |All traffic| All | All  | (the CIDR address for your VPC) |
 
-    * (where is this configured? I can't find this security group) For inside the VPC only, we add the following ports to allow the hub API and connect to the notebooks on remote nodes.
+   * (where is this configured? I can't find this security group) For inside the VPC only, we add the following ports to allow the hub API and connect to the notebooks on remote nodes.
 
         |Ports |	Protocol	| Source |
         |------|----------|--------|
@@ -31,12 +31,12 @@ For now, let's get the server (an AWS EC2 instance) up and running, and install 
         Later on we'll use this node as a Docker swarm manager, which will require a few more open ports inside the VPC.
         See [Docker Swarm manager and workers](../swarm_legacy/README.md) for details.
 
-    * Since we're inside a VPC (i.e., closed off from the outside world except for the above ports), we can instead just enable all ports 0-65536 for 172.31.0.0/16, which is the CIDR of the default VPC.
+   * Since we're inside a VPC (i.e., closed off from the outside world except for the above ports), we can instead just enable all ports 0-65536 for 172.31.0.0/16, which is the CIDR of the default VPC.
   
-    * You will need to create or enter a SSH Key to launch the instance, make sure to put the pem file in your ~/.ssh folder and that you change the permissions of the file using:
+   * You will need to create or enter a SSH Key to launch the instance, make sure to put the pem file in your ~/.ssh folder and that you change the permissions of the file using:
     chmod 400 <your-key.pem>
     
-    * Return to the EC2 menu and wait for the instance to finish building. 
+   * Return to the EC2 menu and wait for the instance to finish building. 
     
 ### 2. Connect to the EC2 instance and install a bunch of packages
    * To connect to the new instance, you'll need your SSH private key.
@@ -118,26 +118,25 @@ For now, let's get the server (an AWS EC2 instance) up and running, and install 
      ```
 
 ### 3. Set up Jupyterhub
-    * Add at least one admin user to `/srv/jupyterhub/userlist` with the following format
+   * Add at least one admin user to `/srv/jupyterhub/userlist` with the following format
         ```
         user.name@gmail.com admin
         ```
-      This user will add other users through the web interface.
-      We have callbacks set up in `my_oauthenticator.py` that should automagically get things set up, which includes
+      This user will add other users through the web interface. But first we will have to set up nginx , NFS, and Dockerswarm.
+      We will have callbacks set up in `my_oauthenticator.py` that should automagically get things set up, which will include:
 
       1. Creating a system user on the Jupyterhub machine
       2. Creating a home directory for that user on the NFS-mounted EFS (mounted on `/mnt/nfs/home`)
       3. `rsync`ing the notebooks from this repo into the user's home directory.
 
-    * If you have the [nginx](../nginx/README.md) and the [NFS mount](../nfs/README.md) set up, you can try starting Jupyterhub.
-
-      But...
-      - if authentication failed (e.g., user not in `/srv/jupyterhub/userlist` or user not added through Jupyterhub web interface by admin user), you should see a 403 "Forbidden".
-      - we haven't built/pulled the data8-notebook (see [data8-notebook README](../data8-notebook/README.md)) or started the Docker swarm manager/workers, so if you try to start a server, you should see a 500 "Internal Server Error".
-
 ### 4. Set up [nginx](../nginx/README.md), [NFS](../nfs/README.md), and set up the [Docker swarm](../swarm_legacy/README.md).
 
 ### 5. Start Jupyterhub
 
-    This should be as simple as running `start.sh`.
-    I like to run `start.sh` in a `screen` session so I can detach and logout of my SSH connection.
+   This should be as simple as running `start.sh`.
+   I like to run `start.sh` in a `screen` session so I can detach and logout of my SSH connection.
+    
+   But...
+   * if authentication failed (e.g., user not in `/srv/jupyterhub/userlist` or user not added through Jupyterhub web interface    by admin user), you should see a 403 "Forbidden".
+   
+   * we haven't built/pulled the data8-notebook (see [data8-notebook README](../data8-notebook/README.md)) or started the Docker swarm manager/workers, so if you try to start a server, you should see a 500 "Internal Server Error".
