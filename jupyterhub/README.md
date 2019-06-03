@@ -5,7 +5,7 @@ It will also run the Docker Swarm manager (container), which will connect Jupyte
 For now, let's get the server (an AWS EC2 instance) up and running, and install Jupyterhub.
 
 
-1. Starting the hub/webserver/Swarm manager instance
+### 1. Starting the hub/webserver/Swarm manager instance
    * (Choose AMI and instance type) We used a standard 64-bit(x86) Amazon Linux AMI on a t2.micro instance for testing, however a larger instance is recommended for the actual build. May need to install a few more packages with `pip` and `conda`.
    * (configure instance and storage and tags?) 
    * (configure security groups) 
@@ -38,7 +38,7 @@ For now, let's get the server (an AWS EC2 instance) up and running, and install 
     
     * Return to the EC2 menu and wait for the instance to finish building. 
     
-2. Connect to the EC2 instance and install a bunch of packages
+### 2. Connect to the EC2 instance and install a bunch of packages
    * To connect to the new instance, you'll need your SSH private key.
     
    * connect to your ec2 instance by opening a terminal(for mac or linux) and typing 
@@ -117,7 +117,7 @@ For now, let's get the server (an AWS EC2 instance) up and running, and install 
      pip install oauthenticator dockerspawner --user
      ```
 
-3. Set up Jupyterhub
+### 3. Set up Jupyterhub
     * Add at least one admin user to `/srv/jupyterhub/userlist` with the following format
         ```
         user.name@gmail.com admin
@@ -135,9 +135,9 @@ For now, let's get the server (an AWS EC2 instance) up and running, and install 
       - if authentication failed (e.g., user not in `/srv/jupyterhub/userlist` or user not added through Jupyterhub web interface by admin user), you should see a 403 "Forbidden".
       - we haven't built/pulled the data8-notebook (see [data8-notebook README](../data8-notebook/README.md)) or started the Docker swarm manager/workers, so if you try to start a server, you should see a 500 "Internal Server Error".
 
-4. Set up [nginx](../nginx/README.md), [NFS](../nfs/README.md), and set up the [Docker swarm](../swarm_legacy/README.md).
+### 4. Set up [nginx](../nginx/README.md), [NFS](../nfs/README.md), and set up the [Docker swarm](../swarm_legacy/README.md).
 
-5. Start Jupyterhub
+### 5. Start Jupyterhub
 
     This should be as simple as running `start.sh`.
     I like to run `start.sh` in a `screen` session so I can detach and logout of my SSH connection.
