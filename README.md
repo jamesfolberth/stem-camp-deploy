@@ -26,7 +26,7 @@ It's highly recommended to set up MFA on your root account, and set up an IAM us
 TODO JMF 22 May 2018: note about use of `example.com`
 
 1. [Set up manager instance and Jupyterhub](jupyterhub/README.md)
-2. [Proxy server](nginx/README.md)
+2. [NGINX Proxy server](nginx/README.md)
 3. [Docker Swarm manager and workers](swarm_legacy/README.md)
 4. [Data persistence with NFS](nfs/README.md)
 
