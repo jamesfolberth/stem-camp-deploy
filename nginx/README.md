@@ -89,26 +89,26 @@ TODO JMF 22 May 2018: move to nginx README
    For now, the Jupyterhub instance will run the hub as well as serve static HTML, so we set up hosted zones to point to the elastic IP we allocated for the hub instance.
    We can change that later, though.
 
-3. (this section may need more work)To point our domain (and subdomain) to the right IP, we need to configure two hosted zones.
+3. (this section needs to be checked)To point our domain (and subdomain) to the right IP, we need to configure two record sets under the auto generated hosted zone.
 (See [set up the subdomain](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/dns-routing-traffic-for-subdomains.html#dns-routing-traffic-for-subdomains-creating-hosted-zone) for more information).
 
-* Set the hosted zone to route to `example.com`.
-   1.Sign in to the [Route 53](https://console.aws.amazon.com/route53/home) console and click the "Hosted zones" from the navigation pane on the left.
-   2. Note that a hosted zone has been preconfigured for `example.com` when you registered the domain. Select this record.
-   3. Click "Create Record Set" to point the domain to the elastic IP allocatd earlier.
+4. Set the hosted zone to route to `example.com`.
+    * Sign in to the [Route 53](https://console.aws.amazon.com/route53/home) console and click the "Hosted zones" from the navigation pane on the left.
+    * Note that a hosted zone has been preconfigured for `example.com` when you registered the domain. Select this record. If you do not have a new zone, enter the following information into the corresponding fields and create the hosted zone:
+      * For Domain Name, type your domain name (`example.com`).
+      * For Comment, type text that describes what the subdomain does or is for.
+      * For Type, choose Public.
+      * Create the Host zone.
+     
+   * Click "Create Record Set" to point the domain to the elastic IP allocatd earlier.
      * Leave "Name" blank, since we're going to set up the base domain.
      * Leave "Type" as "A - IPv4 address"
      * Leave time to live (TTL) as 300 seconds
      * For "Value", enter the elastic IP allocated earlier and associated with the hub/`nginx` instance.
      * "Routing Policy" can be "Simple".
      * Click "Create"
- 
- * Set the hosted zone for `hub.example.com`
-    1. For this new zone, enter the following information into the corresponding fields and create the hosted zone:
-      * For Domain Name, type your domain name (`example.com`).
-      * For Comment, type text that describes what the subdomain does or is for.
-      * For Type, choose Public.
-    2. Repeat the same steps from `example.com`.
+
+   4.Create a record set for the Jupyterhub. Follow the previous step, but instead enter hub in the "Name" section.
 
 ## Setting up nginx
 1. On the AMI we've used (one of the Amazon Linux flavors), `nginx` is in the repos, so install it with
