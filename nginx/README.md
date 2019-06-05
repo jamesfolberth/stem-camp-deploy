@@ -10,34 +10,81 @@ We do all this in a few pieces:
  * Install and configure `nginx`.
 
 TODO JMF 22 May 2018: mention that user should change `example.com` in conf files
-## Generate an SSL/TLS certificate
 
+## Set up domain name and routing
+1. Register a domain name `example.com` Amazon [Route 53](https://aws.amazon.com/route53/). Select all of the defaults.
+2. Create a new [Elastic IP](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-ip-addresses-eip.html) and associate it with the EC2 instance running the hub and `nginx`. 
+   * Enter the EC2 dashboard.
+   * Select 'Elastic IPs' from the sidebar menu
+   * Select 'Allocate new address'
+   * Choose 'Amazon Pool'
+   * Right click on the newly created IP and select 'Associate address'
+   * Associate the address to your Jupyterhub/NGINX instance.
+   
+   For now, the Jupyterhub instance will run the hub as well as serve static HTML, so we set up hosted zones to point to the elastic IP we allocated for the hub instance.
+   We can change that later, though.
+
+3. (this section needs to be checked)To point our domain (and subdomain) to the right IP, we need to configure two record sets under the auto generated hosted zone.
+(See [set up the subdomain](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/dns-routing-traffic-for-subdomains.html#dns-routing-traffic-for-subdomains-creating-hosted-zone) for more information).
+
+4. Set the hosted zone to route to `example.com`.
+    * Sign in to the [Route 53](https://console.aws.amazon.com/route53/home) console and click the "Hosted zones" from the navigation pane on the left.
+    * Note that a hosted zone has been preconfigured for `example.com` when you registered the domain. Select this record. If you do not have a new zone, enter the following information into the corresponding fields and create the hosted zone:
+      * For Domain Name, type your domain name (`example.com`).
+      * For Comment, type text that describes what the subdomain does or is for.
+      * For Type, choose Public.
+      * Create the Host zone.
+     
+   * Click "Create Record Set" to point the domain to the elastic IP allocatd earlier.
+     * Leave "Name" blank, since we're going to set up the base domain.
+     * Leave "Type" as "A - IPv4 address"
+     * Leave time to live (TTL) as 300 seconds
+     * For "Value", enter the elastic IP allocated earlier and associated with the hub/`nginx` instance.
+     * "Routing Policy" can be "Simple".
+     * Click "Create"
+
+   4.Create a record set for the Jupyterhub. Follow the previous step, but instead enter hub in the "Name" section.
+
+## Setting up nginx and SSL
+1. On the AMI we've used (one of the Amazon Linux flavors), `nginx` is in the repos, so install it with
+
+   ```bash
+   sudo yum install nginx
+   sudo service nginx start
+   ```
+2. Test that njinx is running. Go to the EC2 instance in the AWS console, locate the jupyterhub instance and copy the Public DNS url into your web browser. There should be an Nginx basic page. Also note that Nginx has a [basic setup guide](https://www.nginx.com/blog/setting-up-nginx/).
+
+3. Create the SSL/TLS certificate:
+(!using certbot is far more efficient, we should remove all the files from the repo related to the source install)
    * If you don't have a domain name to use, generate a self-signed SSL certificate. A self-signed cert is quite okay for testing/development, but your browser will probably warn you about the cert when you navigate to your page.
 
     ```bash
     sudo mkdir /srv/jupyterhub/ssl
     sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /srv/jupyterhub/ssl/hub.key -out /srv/jupyterhub/ssl/hub.crt
     ```
+   * If you do have a domain name to use, we install the certificates using Certbot. Go to the [Certbot website](https://certbot.eff.org/lets-encrypt/centosrhel7-other). The instructions for installation are well documented. You will choose Nginx and Centos7 for the options. Make sure to check that your cert was installed using the recommended site in the completetion text of the install. 
 
-   * If you do have a domain name to use, this example assumes we're generating certs for `example.com`(which you will replace with your own domain). We're going to use `example.com` to serve static HTML pages, and `hub.example.com` for Jupyterhub, so we'll actually create two certs.
-The certs we generate are output to `/etc/letsencrypt/live/`
+3. Copy over the configuration files from this directory.
+   These files are pretty much exactly the configuration files from [Jupyterhub's examples](http://jupyterhub.readthedocs.io/en/latest/config-examples.html).
+   At the time of writing, they haven't written the AWS+NGINX
+   We use a HTTP->HTTPS redirection from [Bjorn Johansen](https://www.bjornjohansen.no/redirect-to-https-with-nginx).
 
-1. Generate an SSL/TLS key with [Let's Encrypt](https://letsencrypt.org/).
+   Rename the default config.
    ```bash
-   cd && cd repos
-   git clone https://github.com/letsencrypt/letsencrypt
-   cd letsencrypt
-   sudo ./letsencrypt-auto certonly --standalone -v -d hub.example.com --debug # need debug on Amazon Linux
+   sudo su
+   cd /etc/nginx/
+   mv nginx.conf nginx.conf.bak
    ```
+   Now copy (still as root) over `nginx.conf` to `/etc/nginx/nginx.conf`, and `conf.d` to `/etc/nginx/confg.d`.
+   Edit these files to point to your SSL/TLS certs and D-H parameters.
 
-2. Generate D-H parameters
-   ```bash
-   sudo openssl dhparam -out /etc/letsencrypt/live/hub.example.com/dhparams.pem 2048
-   ```
+4. The static HTML server expects files in `/data/www`.
+   The proxy to the hub expects to the hub to be serving on port 8000 of the localhost.
+
+5. Reload nginx files with `sudo nginx -s reload`.
 
 
-TODO JMF 22 May 2018: move to nginx README
-
+   
 ## Register the project with Google OAuth 2.0
 
    We want to use Google's authentication system for our project.
@@ -76,68 +123,3 @@ TODO JMF 22 May 2018: move to nginx README
 
      Note hat these are **secret**, and should not be pushed to a git repo or accessible for other users (hence the `chmod 700` when creating `/srv/jupyterhub` and why we source this file instead of hard-coding a config file in the repo).
 
-## Set up domain name and routing
-1. Register a domain name `example.com` Amazon [Route 53](https://aws.amazon.com/route53/). Select all of the defaults.
-2. Create a new [Elastic IP](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-ip-addresses-eip.html) and associate it with the EC2 instance running the hub and `nginx`. 
-   * Enter the EC2 dashboard.
-   * Select 'Elastic IPs' from the sidebar menu
-   * Select 'Allocate new address'
-   * Choose 'Amazon Pool'
-   * Right click on the newly created IP and select 'Associate address'
-   * Associate the address to your Jupyterhub/NGINX instance.
-   
-   For now, the Jupyterhub instance will run the hub as well as serve static HTML, so we set up hosted zones to point to the elastic IP we allocated for the hub instance.
-   We can change that later, though.
-
-3. (this section needs to be checked)To point our domain (and subdomain) to the right IP, we need to configure two record sets under the auto generated hosted zone.
-(See [set up the subdomain](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/dns-routing-traffic-for-subdomains.html#dns-routing-traffic-for-subdomains-creating-hosted-zone) for more information).
-
-4. Set the hosted zone to route to `example.com`.
-    * Sign in to the [Route 53](https://console.aws.amazon.com/route53/home) console and click the "Hosted zones" from the navigation pane on the left.
-    * Note that a hosted zone has been preconfigured for `example.com` when you registered the domain. Select this record. If you do not have a new zone, enter the following information into the corresponding fields and create the hosted zone:
-      * For Domain Name, type your domain name (`example.com`).
-      * For Comment, type text that describes what the subdomain does or is for.
-      * For Type, choose Public.
-      * Create the Host zone.
-     
-   * Click "Create Record Set" to point the domain to the elastic IP allocatd earlier.
-     * Leave "Name" blank, since we're going to set up the base domain.
-     * Leave "Type" as "A - IPv4 address"
-     * Leave time to live (TTL) as 300 seconds
-     * For "Value", enter the elastic IP allocated earlier and associated with the hub/`nginx` instance.
-     * "Routing Policy" can be "Simple".
-     * Click "Create"
-
-   4.Create a record set for the Jupyterhub. Follow the previous step, but instead enter hub in the "Name" section.
-
-## Setting up nginx
-1. On the AMI we've used (one of the Amazon Linux flavors), `nginx` is in the repos, so install it with
-
-   ```bash
-   sudo yum install nginx
-   sudo service nginx start
-   ```
-
-   You can test the nginx install by pointing your web browswer to the IP of the EC2 instance.
-   You should see a default `index.html`.
-
-   Nginx has a [basic setup guide](https://www.nginx.com/blog/setting-up-nginx/).
-
-2. Now copy over the configuration files from this directory.
-   These files are pretty much exactly the configuration files from [Jupyterhub's examples](http://jupyterhub.readthedocs.io/en/latest/config-examples.html).
-   At the time of writing, they haven't written the AWS+NGINX
-   We use a HTTP->HTTPS redirection from [Bjorn Johansen](https://www.bjornjohansen.no/redirect-to-https-with-nginx).
-
-   Rename the default config.
-   ```bash
-   sudo su
-   cd /etc/nginx/
-   mv nginx.conf nginx.conf.bak
-   ```
-   Now copy (still as root) over `nginx.conf` to `/etc/nginx/nginx.conf`, and `conf.d` to `/etc/nginx/confg.d`.
-   Edit these files to point to your SSL/TLS certs and D-H parameters.
-
-3. The static HTML server expects files in `/data/www`.
-   The proxy to the hub expects to the hub to be serving on port 8000 of the localhost.
-
-4. Reload nginx files with `sudo nginx -s reload`.
