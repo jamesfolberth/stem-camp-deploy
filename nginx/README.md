@@ -92,10 +92,11 @@ Copy over the configuration files from this directory.
    A lot of Jupyterhub deployments use GitHub authentication, which is good for their use-case (because their users likely already have GitHub accounts), but for us, Google is probably simpler.
    To do this, we want to create an OAuth 2.0 Client ID for our project, so the users can authenticate with their Google accounts.
 
-   * Go to [Google API Manager](https://console.developers.google.com/apis/credentials), create a project, and create an OAuth client ID.
-     You'll need to set a meaningful, recognizable project name, as it will be displayed to the users when they authenticate.
-
-   * Set the authorized JS origins to `https://hub.example.com:443`, and the authorized callback URI to `https://hub.example.com:443/hub/oauth_callback`.
+   * Go to [Google API Manager](https://console.developers.google.com/apis/credentials), create a project
+   * You'll need to set a meaningful, recognizable project name, as it will be displayed to the users when they authenticate. Create the project
+   * Select 'Domain Verification' and type in 'hub.example.com' and submit. You will likely be bounced to 'webmaster central' to authenticate your domain.
+   * Select 'Other' as your provider and follow the instructions. You will add the DNS instructions given as Record sets in your AWS console under the 'example.com' Hosted zone.
+   * Under the credentials dropdown, select 'create credentials' and select 'oauth client ID'. Choose 'web application', then set the authorized JS origins to `https://hub.example.com:443`, and the authorized callback URI to `https://hub.example.com:443/hub/oauth_callback`.
 
      - If you're using your own domain, set `OAUTH_CALLBACK_URL` in the Jupyterhub `start.sh` script.
 
