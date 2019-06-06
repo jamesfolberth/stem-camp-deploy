@@ -125,3 +125,4 @@ Copy over the configuration files from this directory.
 
      Note that these are **secret**, and should not be pushed to a git repo or accessible for other users (hence the `chmod 700` when creating `/srv/jupyterhub` and why we source this file instead of hard-coding a config file in the repo).
 
+Nginx is now set up. Move to the [Docker Swarm ReadMe](https://github.com/jamesfolberth/stem-camp-deploy/blob/ingoglia/swarm_legacy/README.md) for the next step in the setup.
