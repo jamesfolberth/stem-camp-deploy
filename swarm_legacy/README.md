@@ -5,12 +5,9 @@ At the time of this writing, there aren't yet good ways to handling the new swar
 This is probably going to be fixed in the future, but for now, it should provide a (stable) way to use Docker swarm.
 Documentation for <i>legacy</i> Docker swarm can be found [here](https://docs.docker.com/swarm/overview/).
 
-1. We'll need a few ports open:
-   We create another security group named "Swarm Manager" that has the following ports open to the VPC.
-   Again, I think we can just open them all up to the VPC.
-   Ports 2375, 4000, and 8500 are used by Docker swarm and consul, a distributed key-store used to store information about the nodes.
-   Ports 32000-33000 are used by the Jupyter notebook servers (inside of Docker containers).
-
+1. We'll need to create a new security group under EC2:
+  (I don't think that we are using the swarm manager? Seems that we combined the manager with the hub, but we should also have more than one manager) We create another security group named "Swarm manager" that has the following ports open to the VPC. Leave the outbound ports as default and add the following custom inbound port rules:
+  
       |Ports |	Protocol	| Source |
       |------|----------|--------|
       |2375	| tcp	| 172.31.0.0/16 |
@@ -18,15 +15,13 @@ Documentation for <i>legacy</i> Docker swarm can be found [here](https://docs.do
       |8500| tcp	| 172.31.0.0/16 |
       |32000-33000| tcp	| 172.31.0.0/16 |
 
-   We make a final security group named "Swarm Worker" that has the following ports open to the VPC.
-
+   We make a final security group named "Swarm Worker". Leave the outbound ports as default and add the following custom inbound port rules:
+   
       |Ports |	Protocol	| Source |
       |------|----------|--------|
-      |2375	| tcp	| 172.31.0.0/16 |
-      |4000	| tcp	| 172.31.0.0/16 |
-      |8500| tcp	| 172.31.0.0/16 |
-
-     Alternatively, we can just open up port 22 to the outside world and all ports inside the VPC (172.31.0.0/16).
+      |All TCP	| tcp	| 172.31.0.0/16 |
+      |22	| tcp	| 172.31.0.0/16 |
+      |22 | tcp	| 172.31.0.0/16 |
 
 2. Install Docker on a new manager or worker node.
    ```bash
