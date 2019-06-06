@@ -92,16 +92,13 @@ Copy over the configuration files from this directory.
    A lot of Jupyterhub deployments use GitHub authentication, which is good for their use-case (because their users likely already have GitHub accounts), but for us, Google is probably simpler.
    To do this, we want to create an OAuth 2.0 Client ID for our project, so the users can authenticate with their Google accounts.
 
-   * Go to [Google API Manager](https://console.developers.google.com/apis/credentials), create a project
-   * You'll need to set a meaningful, recognizable project name, as it will be displayed to the users when they authenticate. Create the project
-   * Select 'Domain Verification' and type in 'hub.example.com' and submit. You will likely be bounced to 'webmaster central' to authenticate your domain.
-   * Select 'Other' as your provider and follow the instructions. You will add the DNS instructions given as Record sets in your AWS console under the 'example.com' Hosted zone.
-   * Under the credentials dropdown, select 'create credentials' and select 'oauth client ID'. Choose 'web application', then set the authorized JS origins to `https://hub.example.com:443`, and the authorized callback URI to `https://hub.example.com:443/hub/oauth_callback`.
+   * Go to [Google API Manager](https://console.developers.google.com/apis/credentials), create a project, choose a name and submit
+   * Under your new project, select credentials from the side menu, then select 'Domain Verification'. Under the important message, there is a link to the 'search console' to verify your domain. Select this link and follow the instructions.
+   * Select 'Other' as your provider and follow the instructions. You will add the DNS instructions given as Record sets in your AWS console under the 'example.com' Hosted zone. Once your have completed the verification of your domain, return to the credentials page and type in 'hub.example.com' and submit.
+   * Under 'Oauth Consent Screen', you'll need to set a meaningful, recognizable project name, as it will be displayed to the users when they authenticate. You will need to add `example.com` to your authorized domains list. Now save your settings 
+   * Under the credentials dropdown, select 'create credentials' and select 'oauth client ID'. Choose 'web application', then set the authorized JS origins to `https://hub.example.com:443`, and the authorized callback URI to `https://hub.example.com:443/hub/oauth_callback`. Submit and copy down the Client ID and Secret for later configuration.
 
-     - If you're using your own domain, set `OAUTH_CALLBACK_URL` in the Jupyterhub `start.sh` script.
-
-     - If you're using the EC2 public hostname (something like `ec2-{PUBLIC_IPv4}.us-west-2.compute.amazonaws.com`) instead of your own domain, you can use the following in `start.sh` to automatically set `OAUTH_CALLBACK_URL` to the current instance's public hostname.
-        Note that you may have to update the authorized JS origin and callback URI on [Google API Manager](https://console.developers.google.com/apis/credentials) every time you stop/start the instance, as the restarted instance may be assigned a new DNS name.
+     - If you're using your own domain, set `OAUTH_CALLBACK_URL` in the Jupyterhub `start.sh` script.(To what? why 8443? Does the following bash script explain? Why not just mention the export line?)
 
         ```bash
         # Get the public hostname
@@ -114,8 +111,11 @@ Copy over the configuration files from this directory.
         fi
         export OAUTH_CALLBACK_URL=https://${EC2_PUBLIC_HOSTNAME}:443/hub/oauth_callback
         ```
+     - If you're using the EC2 public hostname (something like `ec2-{PUBLIC_IPv4}.us-west-2.compute.amazonaws.com`) instead of your own domain, you can use the following in `start.sh` to automatically set `OAUTH_CALLBACK_URL` to the current instance's public hostname.
+           
+        Note that you may have to update the authorized JS origin and callback URI on [Google API Manager](https://console.developers.google.com/apis/credentials) every time you stop/start the instance, as the restarted instance may be assigned a new DNS name.
 
-   * Once you've created the project, copy the client ID and secret to the file `/srv/jupyterhub/env`.
+   * Once you've created the Oauth Client ID, copy the client ID and secret to the file `/srv/jupyterhub/env`.
 
      ```bash
      # Google OAuth 2.0
@@ -123,5 +123,5 @@ Copy over the configuration files from this directory.
      export OAUTH_CLIENT_SECRET=BBBBBBBBBBBBBBBBBBBBB
      ```
 
-     Note hat these are **secret**, and should not be pushed to a git repo or accessible for other users (hence the `chmod 700` when creating `/srv/jupyterhub` and why we source this file instead of hard-coding a config file in the repo).
+     Note that these are **secret**, and should not be pushed to a git repo or accessible for other users (hence the `chmod 700` when creating `/srv/jupyterhub` and why we source this file instead of hard-coding a config file in the repo).
 
