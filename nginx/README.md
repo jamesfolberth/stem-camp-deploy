@@ -64,7 +64,7 @@ TODO JMF 22 May 2018: mention that user should change `example.com` in conf file
     ```
    * If you do have a domain name to use, we install the certificates using Certbot. Go to the [Certbot website](https://certbot.eff.org/lets-encrypt/centosrhel7-other). The instructions for installation are well documented. You will choose Nginx and Centos7 for the options. Make sure to check that your cert was installed using the recommended site in the completetion text of the install. 
 
-3. (seems to mee that this section is no longer relevant?)
+3. (This section needs a lot more information)
 Copy over the configuration files from this directory.
    These files are pretty much exactly the configuration files from [Jupyterhub's examples](http://jupyterhub.readthedocs.io/en/latest/config-examples.html).
    At the time of writing, they haven't written the AWS+NGINX
