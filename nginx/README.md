@@ -65,10 +65,8 @@ TODO JMF 22 May 2018: mention that user should change `example.com` in conf file
    * If you do have a domain name to use, we install the certificates using Certbot. Go to the [Certbot website](https://certbot.eff.org/lets-encrypt/centosrhel7-other). The instructions for installation are well documented. You will choose Nginx and Centos7 for the options. Make sure to check that your cert was installed using the recommended site in the completetion text of the install. 
 
 3. (This section needs a lot more information)
-Copy over the configuration files from this directory.
-   These files are pretty much exactly the configuration files from [Jupyterhub's examples](http://jupyterhub.readthedocs.io/en/latest/config-examples.html).
-   At the time of writing, they haven't written the AWS+NGINX
-   We use a HTTP->HTTPS redirection from [Bjorn Johansen](https://www.bjornjohansen.no/redirect-to-https-with-nginx).
+
+* Copy over the configuration files from `/home/ec2-user/repos/stem-camp-deploy/nginx`: 
 
    Rename the default config.
    ```bash
@@ -76,7 +74,12 @@ Copy over the configuration files from this directory.
    cd /etc/nginx/
    mv nginx.conf nginx.conf.bak
    ```
-   Now copy (still as root) over `nginx.conf` to `/etc/nginx/nginx.conf`, and `conf.d` to `/etc/nginx/confg.d`.
+   Now copy (still as root) over `nginx.conf` to `/etc/nginx/nginx.conf`, and `conf.d` to `/etc/nginx/conf.d`. There are several lines in these files were you will need to replace `example.com` with your own domain. Once you have changed all of the information, you can check that the conf file syntax is correct with the command `sudo nginx -t`.
+
+   At the time of writing, they haven't written the AWS+NGINX
+   We use a HTTP->HTTPS redirection from [Bjorn Johansen](https://www.bjornjohansen.no/redirect-to-https-with-nginx).
+
+
    Edit these files to point to your SSL/TLS certs and D-H parameters.
 
 4. The static HTML server expects files in `/data/www`.
