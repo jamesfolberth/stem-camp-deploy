@@ -93,9 +93,16 @@ TODO JMF 22 May 2018: mention that user should change `example.com` in conf file
    A lot of Jupyterhub deployments use GitHub authentication, which is good for their use-case (because their users likely already have GitHub accounts), but for us, Google is probably simpler.
    To do this, we want to create an OAuth 2.0 Client ID for our project, so the users can authenticate with their Google accounts.
 
-   * Go to [Google API Manager](https://console.developers.google.com/apis/credentials), create a project, choose a name and submit
-   * Under your new project, select credentials from the side menu, then select 'Domain Verification'. Under the important message, there is a link to the 'search console' to verify your domain. Select this link and follow the instructions.
-   * Select 'Other' as your provider and follow the instructions. You will add the DNS instructions given as Record sets in your AWS console under the 'example.com' Hosted zone. Once your have completed the verification of your domain, return to the credentials page and type in 'hub.example.com' and submit.
+   To OAuth you will need to:
+      * Verify your Domain with [Google Search Console](https://search.google.com/search-console/about).
+      * Create a project in [Google API Manager](https://console.developers.google.com/apis/credentials)
+      * Configure DNS on Route53
+
+
+   * Go to [Google API Manager](https://console.developers.google.com/apis/credentials), login with a non-cu affiliated gmail account, create a project, choose a name and submit
+   * Under your new project, select credentials from the side menu, then select 'Domain Verification'. Then Add domain. You will be asked to first register your domian at the [Google Search Console](https://search.google.com/search-console/about).
+   * Under the domain option enter your `example.com` where you will need to sign into your DNS provider account and create a txt record set to verify your ownership. Once verified return to the API Manager.
+   * You will add the DNS instructions given as Record sets in your AWS console under the `example.com` Hosted zone. Once you have completed the verification of your domain, return to the credentials page and type in 'hub.example.com' and submit.
    * Under 'Oauth Consent Screen', you'll need to set a meaningful, recognizable project name, as it will be displayed to the users when they authenticate. You will need to add `example.com` to your authorized domains list. Now save your settings 
    * Under the credentials dropdown, select 'create credentials' and select 'oauth client ID'. Choose 'web application', then set the authorized JS origins to `https://hub.example.com:443`, and the authorized callback URI to `https://hub.example.com:443/hub/oauth_callback`. Submit and copy down the Client ID and Secret for later configuration.
 
