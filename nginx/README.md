@@ -74,20 +74,18 @@ TODO JMF 22 May 2018: mention that user should change `example.com` in conf file
    cd /etc/nginx/
    mv nginx.conf nginx.conf.bak
    ```
-   Now copy (still as root) over `nginx.conf` to `/etc/nginx/nginx.conf`, and `conf.d` to `/etc/nginx/conf.d`. There are several lines in these files were you will need to replace `example.com` with your own domain. Once you have changed all of the information, you can check that the conf file syntax is correct with the command `sudo nginx -t`.
+   Now copy (still as root) over `nginx.conf` to `/etc/nginx/nginx.conf`, and `conf.d` to `/etc/nginx/conf.d`. There are several lines in these files were you will need to replace `example.com and hub.example.com` with your own domain. Once you have changed all of the information, you can check that the conf file syntax is correct with the command `sudo nginx -t`.
 
-   At the time of writing, they haven't written the AWS+NGINX
+   (this might not be needed with certbot) At the time of writing, they haven't written the AWS+NGINX
    We use a HTTP->HTTPS redirection from [Bjorn Johansen](https://www.bjornjohansen.no/redirect-to-https-with-nginx).
 
 
    Edit these files to point to your SSL/TLS certs and D-H parameters.
 
 4. The static HTML server expects files in `/data/www`.
-   The proxy to the hub expects to the hub to be serving on port 8000 of the localhost.
+   The proxy to the hub expects the hub to be serving on port 8000 of the localhost. Note that, until you start Jupyterhub, you will get a 503 error when you navigate to `hub.example.com`.
 
 5. Reload nginx files with `sudo nginx -s reload`.
-
-
    
 ## Register the project with Google OAuth 2.0
 
