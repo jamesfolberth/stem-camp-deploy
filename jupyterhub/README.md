@@ -7,7 +7,10 @@ For now, let's get the server (an AWS EC2 instance) up and running, and install 
 
 ### 1. Starting the hub/webserver/Swarm manager instance
    * (Choose AMI and instance type) We used a standard 64-bit(x86) Amazon Linux AMI on a t2.micro instance for testing, however a larger instance is recommended for the actual build. May need to install a few more packages with `pip` and `conda`.
-   * (configure instance and storage and tags?) 
+   * TODO(configure instance and storage and tags?)
+   * (Configure instance details) We use the default VPC, but you can optionally create a new VPC.  Either way, ensure that all future instances use the same VPC.
+   * (Add storage) For testing you can probably get away with 8 GiB, but 16 GiB is probably a safer choice.  We use general purpose SSD storage.
+   * (Add tags) We don't currently use any tags.
    * (configure security groups) 
      We're running all instances in the same AWS virtual private cloud (VPC).
      Suppose our VPC's IPv4 CIDR is 172.31.0.0/16.
@@ -20,21 +23,13 @@ For now, let's get the server (an AWS EC2 instance) up and running, and install 
         |HTTP  | 80	   | tcp 	   | 0.0.0.0/0, ::/0 |
         |HTTPS | 443   | tcp	   | 0.0.0.0/0, ::/0 |
         |All traffic| All | All  | (the CIDR address for your VPC) |
+    
+    Note that we're opening all ports *within* the VPC in the last row; we do this simply to ease the burden of determining which specific ports need to be opened for Jupyterhub, Docker Swarm, etc.  The only way inside the VPC will be via SSH, HTTP, or HTTPS.
 
-   * (where is this configured? I can't find this security group) For inside the VPC only, we add the following ports to allow the hub API and connect to the notebooks on remote nodes.
-
-        |Ports |	Protocol	| Source |
-        |------|----------|--------|
-        |8081| tcp	| 172.31.0.0/16 |
-        |32000-33000| tcp	| 172.31.0.0/16 |
-
-        Later on we'll use this node as a Docker swarm manager, which will require a few more open ports inside the VPC.
-        See [Docker Swarm manager and workers](../swarm_legacy/README.md) for details.
-
-   * Since we're inside a VPC (i.e., closed off from the outside world except for the above ports), we can instead just enable all ports 0-65536 for 172.31.0.0/16, which is the CIDR of the default VPC.
-  
-   * You will need to create or enter a SSH Key to launch the instance, make sure to put the pem file in your ~/.ssh folder and that you change the permissions of the file using:
+   * You will need an SSH key to launch the instance.  If already have a key to use, select the key and launch the instance.  If you need to create a new key, make sure to put the pem file in your ~/.ssh folder and that you change the permissions of the file using:
+    ```bash
     chmod 400 <your-key.pem>
+    ```
     
    * Return to the EC2 menu and wait for the instance to finish building. 
     
@@ -57,6 +52,15 @@ For now, let's get the server (an AWS EC2 instance) up and running, and install 
      }
      ```
 
+     ~/.ssh/config:
+     ```
+     Host hub.custemcamp.org
+        User ec2-user
+        IdentityFile ~/.ssh/aws_ssh_key.pem
+     ```
+
+   * It's probably wise to do a `sudo yum update` to update all packages on the instance.
+
    * Make a directory for Jupyterhub server files (e.g., SSL certs, user list)
       ```bash
       sudo mkdir -p /srv/jupyterhub
@@ -64,12 +68,11 @@ For now, let's get the server (an AWS EC2 instance) up and running, and install 
       chmod -R 700 /srv/jupyterhub
       ```
 
-   * Install a repo and docker, then start docker:
+   * We need git-lfs for some things.  Pull the git-lfs repo, install some packages, and start up docker:
       ```bash
-      sudo yum update -y
       curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.rpm.sh | sudo bash
       sudo amazon-linux-extras install epel
-      sudo yum install -y python36 python36-pip python36-devel git git-lfs docker gcc gcc-c++
+      sudo yum install -y python36 python36-pip python36-devel git git-lfs docker gcc gcc-c++ openssl-devel
       sudo service docker start
       ```
 
@@ -93,11 +96,12 @@ For now, let's get the server (an AWS EC2 instance) up and running, and install 
      You probably want to visit [nodejs.org](https://nodejs.org/en/download/) to look up the latest LTS version.(search for the 64-bit linux version and replace the <vx.xx.xx> with the most recent version number)
 
      ```bash
+     node_version=vX.XX.XX 
+     
      cd && mkdir downloads && cd downloads
-
-     wget https://nodejs.org/dist/<vX.XX.XX>/node-<vX.XX.XX>-linux-x64.tar.xz
-     tar -xvf node-<vX.XX.XX>-linux-x64.tar.xz
-     cd node-<vX.XX.XX>-linux-x64.tar.xz
+     wget https://nodejs.org/dist/$node_version/node-$node_version-linux-x64.tar.xz
+     tar -xvf node-$node_version-linux-x64.tar.xz
+     cd node-$node_version-linux-x64
      sudo cp -r bin/* /usr/bin/
      sudo cp -r include/* /usr/include/
      sudo cp -r lib/* /usr/lib/
@@ -110,18 +114,20 @@ For now, let's get the server (an AWS EC2 instance) up and running, and install 
      sudo npm install -g configurable-http-proxy
      ```
 
-   * Install python packages with `pip`.
+   * Install python packages with `pip3`.
      ```bash
-     pip install jupyterhub --user
-     pip install --upgrade notebook
-     pip install oauthenticator dockerspawner --user
+     sudo pip3 install jupyterhub --user
+     sudo pip3 install --upgrade notebook
+     sudo pip3 install oauthenticator dockerspawner --user
      ```
 
 ### 3. Set up Jupyterhub
-   * Add at least one admin user to `/srv/jupyterhub/userlist` with the following format
+   * Add at least one admin user to the new file `/srv/jupyterhub/userlist` with the following format
         ```
         user.name@gmail.com admin
         ```
+    **Note** If you use a colorado.edu address, you must use `{identikey}@colorado.edu`, not `{firsname}.{lastname}@colorado.edu` or `{lastname}@colorado.edu`.
+
       This user will add other users through the web interface. But first we will have to set up nginx , NFS, and Dockerswarm.
       We will have callbacks set up in `my_oauthenticator.py` that should automagically get things set up, which will include:
 
@@ -130,6 +136,8 @@ For now, let's get the server (an AWS EC2 instance) up and running, and install 
       3. `rsync`ing the notebooks from this repo into the user's home directory.
 
 ### 4. Set up [nginx](../nginx/README.md), [NFS](../nfs/README.md), and set up the [Docker swarm](../swarm_legacy/README.md).
+    We're almost done setting up Jupyterhub, but before we finish we've got to set up nginx, NFS, and Docker swarm.
+    Once those are all set up, return here to start up Jupyterhub.
 
 ### 5. Start Jupyterhub
 
@@ -137,6 +145,6 @@ For now, let's get the server (an AWS EC2 instance) up and running, and install 
    I like to run `start.sh` in a `screen` session so I can detach and logout of my SSH connection.
     
    But...
-   * if authentication failed (e.g., user not in `/srv/jupyterhub/userlist` or user not added through Jupyterhub web interface    by admin user), you should see a 403 "Forbidden".
+   * if authentication failed (e.g., user not in `/srv/jupyterhub/userlist` or user not added through Jupyterhub web interface by admin user), you should see a 403 "Forbidden".
    
    * we haven't built/pulled the data8-notebook (see [data8-notebook README](../data8-notebook/README.md)) or started the Docker swarm manager/workers, so if you try to start a server, you should see a 500 "Internal Server Error".
