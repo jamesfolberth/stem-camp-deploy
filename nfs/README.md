@@ -3,8 +3,9 @@ We create an AWS EFS and mount it with NFS to use as the users' home directories
 This gives the users persistent storage within their Docker containers.
 The EFS must be mounted on both the Jupyterhub/Docker swarm manager instance, and all Docker swarm worker instances.
 
-1. On the AMI we used, `nfs-utils` is already installed.
-   Otherwise, `sudo yum install nfs-utils` to install an NFS client.
+Note that this should be performed on both the Jupyterhub and worker instances:
+
+1. `sudo yum install nfs-utils` to install an NFS client.
 
 2. We need to create a security group that opens up TCP 2409 inside the VPC, which is used by NFS clients.
    We're currently running security groups that are open on all ports inside the VPC.
