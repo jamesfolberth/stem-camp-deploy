@@ -39,21 +39,21 @@ Documentation for <i>legacy</i> Docker swarm can be found [here](https://docs.do
 
 3. Do the [NFS stuff](../nfs/README.md).
 
-4. Clone this repo:
+4. Clone this repo if you haven't already:
    ```bash
    cd && mkdir repos && cd repos
-   git clone https://github.com/jamesfolberth/jupyterhub_AWS_deployment.git
+   git clone https://github.com/jamesfolberth/stem-camp-deploy.git
    ```
 
    Build the notebook image
    ```bash
-   cd ~/repos/jupyterhub_AWS_deployment/deploy/data8-notebook
+   cd ~/repos/stem-camp-deploy/data8-notebook
    ./build.sh
    ```
 
    Alternatively, you can pull the latest version of data8-notebook from Docker hub.
    ```bash
-   cd ~/repos/jupyterhub_AWS_deployment/deploy/data8-notebook
+   cd ~/repos/stem-camp-deploy/data8-notebook
    ./pull.sh
    ```
    This will pull jamesfolberth/data8-notebook:latest and tag it as data8-notebook.
@@ -61,14 +61,14 @@ Documentation for <i>legacy</i> Docker swarm can be found [here](https://docs.do
 
    If we're a manager, start with the `start_manager.sh` script.
    ```bash
-   cd ~/repos/jupyterhub_AWS_deployment/deploy/swarm_legacy
+   cd ~/repos/stem-camp-deploy/swarm_legacy
    ./start_manager.sh
    ```
 
    If we're a worker, start with the `start_worker.sh` script.
    I'm not sure it's strictly necessary, but it's potentially wise/better to ensure the manager is already running.
    ```bash
-   cd ~/repos/jupyterhub_AWS_deployment/deploy/swarm_legacy
+   cd ~/repos/stem-camp-deploy/swarm_legacy
    ./start_worker.sh {LOCAL_IPv4_OF_MANAGER}
    ```
 
