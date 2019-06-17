@@ -7,7 +7,7 @@ The EFS must be mounted on both the Jupyterhub/Docker swarm manager instance, an
    Otherwise, `sudo yum install nfs-utils` to install an NFS client.
 
 2. We need to create a security group that opens up TCP 2409 inside the VPC, which is used by NFS clients.
-   We're currently running security groups that are open on all ports inside the VPC.(could you explain where this security group is?)
+   We're currently running security groups that are open on all ports inside the VPC.(seems that we ended up just using the same security group for jhub?)
 
 3. Now create a new EFS. You can leave most of the options as default however make sure that you are assigning the correct security group to the VPC or the EFS won't mount. 
 
