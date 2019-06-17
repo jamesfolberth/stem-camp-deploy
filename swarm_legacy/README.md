@@ -23,7 +23,7 @@ Documentation for <i>legacy</i> Docker swarm can be found [here](https://docs.do
       |22	| tcp	| 172.31.0.0/16 |
       |22 | tcp	| 172.31.0.0/16 |
 
-2. Create two amazon ami t2.xlarge worker instances, or however many you will need given the amount of students and attach the security group to them.
+2. Create two amazon ami t2.xlarge worker instances, or however many you will need given the amount of students and attach the security group to them. Be aware that the data8 notebooks are 4gb large, so nothing smaller than a t2.large will allow you to build the notebooks.
  
 3.Install Docker on both the jupyterhub and worker instances:
    ```bash
