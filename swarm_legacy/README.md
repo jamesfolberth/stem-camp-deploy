@@ -64,6 +64,7 @@ Documentation for <i>legacy</i> Docker swarm can be found [here](https://docs.do
    If we're a manager, start with the `start_manager.sh` script.
    ```bash
    cd ~/repos/stem-camp-deploy/swarm_legacy
+   docker swarm init
    ./start_manager.sh
    ```
 
