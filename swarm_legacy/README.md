@@ -23,7 +23,9 @@ Documentation for <i>legacy</i> Docker swarm can be found [here](https://docs.do
       |22	| tcp	| 172.31.0.0/16 |
       |22 | tcp	| 172.31.0.0/16 |
 
-2. Install Docker on a new manager or worker node.
+2. Create two amazon ami t2.xlarge worker instances, or however many you will need given the amount of students and attach the security group to them.
+ 
+3.Install Docker on both the jupyterhub and worker instances:
    ```bash
    sudo yum -y update
    curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.rpm.sh | sudo bash
@@ -37,9 +39,9 @@ Documentation for <i>legacy</i> Docker swarm can be found [here](https://docs.do
 
    Logout and then log back in to propagate the group change.
 
-3. Do the [NFS stuff](../nfs/README.md).
+4. Set up NFS on both Jupyterhub and worker instances [NFS stuff](../nfs/README.md).
 
-4. Clone this repo if you haven't already:
+5. Clone this repo if you haven't already:
    ```bash
    cd && mkdir repos && cd repos
    git clone https://github.com/jamesfolberth/stem-camp-deploy.git
@@ -74,7 +76,7 @@ Documentation for <i>legacy</i> Docker swarm can be found [here](https://docs.do
 
    You can get the local IP of the manager instance by running `ec2-metadata` on the manager node or looking in the AWS console.
 
-5.  This should get everything set up.
+6.  This should get everything set up.
 
 ## Some Helpful Commands
 Here are some useful docker commands
