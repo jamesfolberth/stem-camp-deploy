@@ -5,12 +5,9 @@ At the time of this writing, there aren't yet good ways to handling the new swar
 This is probably going to be fixed in the future, but for now, it should provide a (stable) way to use Docker swarm.
 Documentation for <i>legacy</i> Docker swarm can be found [here](https://docs.docker.com/swarm/overview/).
 
-1. We'll need a few ports open:
-   We create another security group named "Swarm Manager" that has the following ports open to the VPC.
-   Again, I think we can just open them all up to the VPC.
-   Ports 2375, 4000, and 8500 are used by Docker swarm and consul, a distributed key-store used to store information about the nodes.
-   Ports 32000-33000 are used by the Jupyter notebook servers (inside of Docker containers).
-
+1. We'll need to create a new security group under EC2:
+  (I don't think that we are using the swarm manager? Seems that we combined the manager with the hub, but we should also have more than one manager) We create another security group named "Swarm manager" that has the following ports open to the VPC. Leave the outbound ports as default and add the following custom inbound port rules:
+  
       |Ports |	Protocol	| Source |
       |------|----------|--------|
       |2375	| tcp	| 172.31.0.0/16 |
@@ -18,17 +15,17 @@ Documentation for <i>legacy</i> Docker swarm can be found [here](https://docs.do
       |8500| tcp	| 172.31.0.0/16 |
       |32000-33000| tcp	| 172.31.0.0/16 |
 
-   We make a final security group named "Swarm Worker" that has the following ports open to the VPC.
-
+   We make a final security group named "Swarm Worker". Leave the outbound ports as default and add the following custom inbound port rules:
+   
       |Ports |	Protocol	| Source |
       |------|----------|--------|
-      |2375	| tcp	| 172.31.0.0/16 |
-      |4000	| tcp	| 172.31.0.0/16 |
-      |8500| tcp	| 172.31.0.0/16 |
+      |All TCP	| tcp	| 172.31.0.0/16 |
+      |22	| tcp	| 172.31.0.0/16 |
+      |22 | tcp	| 172.31.0.0/16 |
 
-     Alternatively, we can just open up port 22 to the outside world and all ports inside the VPC (172.31.0.0/16).
-
-2. Install Docker on a new manager or worker node.
+2. Create two amazon ami t2.xlarge worker instances, or however many you will need given the amount of students and attach the security group to them. Be aware that the data8 notebooks are 4gb large, so nothing smaller than a t2.large will allow you to build the notebooks.
+ 
+3.Install Docker on both the jupyterhub and worker instances:
    ```bash
    sudo yum -y update
    curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.rpm.sh | sudo bash
@@ -42,23 +39,23 @@ Documentation for <i>legacy</i> Docker swarm can be found [here](https://docs.do
 
    Logout and then log back in to propagate the group change.
 
-3. Do the [NFS stuff](../nfs/README.md).
+4. Set up NFS on both Jupyterhub and worker instances [NFS stuff](../nfs/README.md).
 
-4. Clone this repo:
+5. Clone this repo if you haven't already:
    ```bash
    cd && mkdir repos && cd repos
-   git clone https://github.com/jamesfolberth/jupyterhub_AWS_deployment.git
+   git clone https://github.com/jamesfolberth/stem-camp-deploy.git
    ```
 
    Build the notebook image
    ```bash
-   cd ~/repos/jupyterhub_AWS_deployment/deploy/data8-notebook
+   cd ~/repos/stem-camp-deploy/data8-notebook
    ./build.sh
    ```
 
    Alternatively, you can pull the latest version of data8-notebook from Docker hub.
    ```bash
-   cd ~/repos/jupyterhub_AWS_deployment/deploy/data8-notebook
+   cd ~/repos/stem-camp-deploy/data8-notebook
    ./pull.sh
    ```
    This will pull jamesfolberth/data8-notebook:latest and tag it as data8-notebook.
@@ -66,20 +63,21 @@ Documentation for <i>legacy</i> Docker swarm can be found [here](https://docs.do
 
    If we're a manager, start with the `start_manager.sh` script.
    ```bash
-   cd ~/repos/jupyterhub_AWS_deployment/deploy/swarm_legacy
+   cd ~/repos/stem-camp-deploy/swarm_legacy
+   docker swarm init
    ./start_manager.sh
    ```
 
    If we're a worker, start with the `start_worker.sh` script.
    I'm not sure it's strictly necessary, but it's potentially wise/better to ensure the manager is already running.
    ```bash
-   cd ~/repos/jupyterhub_AWS_deployment/deploy/swarm_legacy
+   cd ~/repos/stem-camp-deploy/swarm_legacy
    ./start_worker.sh {LOCAL_IPv4_OF_MANAGER}
    ```
 
    You can get the local IP of the manager instance by running `ec2-metadata` on the manager node or looking in the AWS console.
 
-5.  This should get everything set up.
+6.  This should get everything set up.
 
 ## Some Helpful Commands
 Here are some useful docker commands

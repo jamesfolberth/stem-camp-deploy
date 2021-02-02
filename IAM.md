@@ -116,7 +116,7 @@ Confirm and exit policies.
    - Access type:  AWS Management Console access, the rest default
    - Add the group you created in the previous step
    - No tags
-   Make sure to note down both the sign-in link and the password, because you will need it. (should look like this: https://805551924291.signin.aws.amazon.com/console)
+   Make sure to note down both the sign-in link and the password, because you will need it. (should look like this: https://XXXXXXXXXXXX.signin.aws.amazon.com/console)
 
 5. Under Account settings > STS, deactivate all of the areas that you are not using. For stem camp we only use US West(Oregon).  
 
